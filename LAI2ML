@@ -1,0 +1,18 @@
+echo 'LAI2ML ...'
+. EnvSystem
+Prg1='LAI2ML'
+rm -rf ${wrkDir}
+mkdir ${wrkDir}
+ln -s ${BitmapName1} ${wrkDir}/bitmap_LAI
+ln -s ${BitmapName2} ${wrkDir}/bitmap_ML
+cp ${srcDir}/Bitmap_ML_LAI.f90 ${wrkDir}/.
+cp ${srcDir}/Coor2Num_ML_LAI.f90 ${wrkDir}/.
+cp ${srcDir}/char2real.F90 ${wrkDir}/.
+cp ${srcDir}/${Prg1}.f90 ${wrkDir}/.
+cd ${wrkDir}
+${CompString} -fcheck=bounds Bitmap_ML_LAI.f90 Coor2Num_ML_LAI.f90 char2real.F90 ${Prg1}.f90
+${LinkString} ${Prg1}.out Bitmap_ML_LAI.o Coor2Num_ML_LAI.o char2real.o ${Prg1}.o
+
+./${Prg1}.out
+
+cd ${Dir}

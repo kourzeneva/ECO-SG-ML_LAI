@@ -1,0 +1,30 @@
+
+compiler=gfortran
+Dir=/perm/fih/MY_PROJECTS/ECO-SG-ML_LAI      # Entrance point  
+                                             # (full path!! Do not write 'pwd' here)
+
+wrkDir=${Dir}/wrk # Working directory
+utilDir=${Dir}/util
+scriptsDir=${Dir}/scripts
+srcDir=${Dir}/src
+resDir=${Dir}/res
+dataDir=${Dir}/data
+tmp_dataDir=${Dir}/tmp
+
+BitmapName1=${dataDir}/LAI_0825_c.dir
+BitmapName2=${dataDir}/ecosgml_1.dir
+
+
+CompString="${compiler} -c" # option to read in BYTES, NOT IN WORDS must be used!
+LinkString="${compiler} -o "
+#LinkString="${compiler} -Vaxlib -o " # is Vaxlib needed to read arguments  
+
+export compiler
+export Dir
+export wrkDir
+export utilDir
+export srcDir
+export resDir
+export dataDir
+export Bitmap
+export BitmapName
