@@ -23,6 +23,10 @@ The tool:
 
 ## Usage:
 
+0. Clone the project:
+
+   `git clone git@github.com:kourzeneva/ECO-SG-ML_LAI.git`
+
 1. Make links to files with ECO-SG-ML cover data and LAI data. From `ECO-SG-ML_LAI/data`:
     
    `ln -s .../ecosgml_1.dir . `   
@@ -38,17 +42,17 @@ Note!
 
    This directory should be created only once. If exists, it will be refreshed automatically.
    
-4. To save results, it is recommended also to create the directory `res`. You may also creare the directory `scripts`, for some future needs. From `ECO-SG-ML_LAI`:
+3. To save results, it is recommended also to create the directory `res`. You may also creare the directory `scripts`, for some future needs. From `ECO-SG-ML_LAI`:
 
    `mkdir res`  
    `mkdir scripts`
    
-5. Edit the file `Env_system`. Variables to be adjusted to your setup are:
+4. Edit the file `Env_system`. Variables to be adjusted to your setup are:
 
    `Dir` - enter the directory path here  
    `BitmapName1`, `BitmapName2` - file names for the ECO-SG-ML and LAI data 
 
-6. Run the `LAI2ML` script. From `ECO-SG-ML_LAI`:
+5. Run the `LAI2ML` script. From `ECO-SG-ML_LAI`:
 
    `./LAI2ML`
 
@@ -56,13 +60,13 @@ Note!
    
    Note! The "endian" problem may appear, since the binary files are processed. The tool was tested on the laptop and ECMWF mashine, but still, the problem may happen.
 
-7. Results can be found in the file `wrk/bitmap_lai_ml_comp`. This file is of appr. 10G. It should be moved to the `res` directory manually and renamed as the used wants. Something like:
+6. Results can be found in the file `wrk/bitmap_lai_ml_comp`. This file is of appr. 10G. It should be moved to the `res` directory manually and renamed as the used wants. Something like:
 
    `mv wrk/bitmap_lai_ml_comp res/.`  
    `mv res/bitmap_lai_ml_comp res/LAI_????_c_ml.dir`
 
    The tool does not create the `*.hdr` files, this should be done manually.
    
-9. Main parameters of the fields can be found in `src/Bitmap_ML_LAI.f90`. They can be changed, but one need to be careful, of course.
+7. Main parameters of the fields can be found in `src/Bitmap_ML_LAI.f90`. They can be changed, but one need to be careful, of course.
 
-10. Visualisation tool `GlobVisu` comes without documentation at the moment.  
+8. Visualisation tool `GlobVisu` comes without documentation at the moment.  
