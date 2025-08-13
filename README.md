@@ -27,7 +27,9 @@ The tool:
 
    `git clone git@github.com:kourzeneva/ECO-SG-ML_LAI.git`
 
-1. Make links to files with ECO-SG-ML cover data and LAI data. From `ECO-SG-ML_LAI/data`:
+   ... or download the zip file and unzip it.
+
+2. Make links to files with ECO-SG-ML cover data and LAI data. From `ECO-SG-ML_LAI/data`:
     
    `ln -s .../ecosgml_1.dir . `   
    `ln -s .../LAI_????_c.dir . ` 
