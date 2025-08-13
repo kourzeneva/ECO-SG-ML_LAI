@@ -10,7 +10,7 @@ The tool:
 * Clips the area from the LAI data corresponding the ECO-SG-ML map (Europe)
 * Interpolates the LAI data on the ECO-SG-ML grid with the nearest neighbour method (simply repeating pixels)
 * Extrapolates the LAI data to the areas where a new land appears according to the ECO-SG-ML
-* Combines the new LAI with the ECO-SG-ML covers, compress and write the new fields.
+* Combines the new LAI with the ECO-SG-ML covers, compresses and writes the new fields.
 
 ## Description:
 
