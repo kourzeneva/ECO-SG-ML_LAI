@@ -2,6 +2,10 @@ PROGRAM GlobVisu
 ! PURPOSE: Visualisation of ECO-SG_ML_LAI dataset util
 ! AUTHOR:  Ekaterina Kourzeneva, 
 !          FMI, 08.2025
+! MODIFICATIONS:
+!
+! 08.2025 Ekaterina Kourzeneva, FMI: small updates to visualize the albedo fiels as well
+!
 
  USE Bitmap_ML_LAI, ONLY : &
   NlonB_all, &                         ! Number of longitude pixels of all bitmaps
@@ -24,7 +28,8 @@ PROGRAM GlobVisu
  REAL(KIND=8) :: North, & ! Boundaries of visualised region in deg.
          South, & ! 
          West,  & ! 
-         East     ! 
+         East     !
+ INTEGER :: FV    ! Field version: 1 is LAI, 2 is albedo
 
  INTEGER, PARAMETER :: BV = 2 ! Bitmap version
  CHARACTER(6), PARAMETER :: BitmapFile='bitmap'
@@ -64,8 +69,15 @@ PROGRAM GlobVisu
  READ(CHIN, '(F5.2)') West
  CALL GETARG(4, CHIN)
  READ(CHIN, '(F5.2)') East
+ CALL GETARG(5, CHIN)
+ READ(CHIN,'(I4)') FV
                    
- WRITE(*,*) 'Bitmap is ECO-SG-ML_LAI!'
+ SELECT CASE(FV)
+    CASE(1)
+       WRITE(*,*) 'Bitmap is LAI_*_c.dir'
+    CASE(2)
+       WRITE(*,*) 'Bitmap is AL_*_c.dir'
+ END SELECT
 
  WRITE(*,*) 'North= ', North, ' South:= ', South
  WRITE(*,*) 'West= ', West, ' East= ', East
@@ -178,8 +190,14 @@ PROGRAM GlobVisu
     DEALLOCATE(LonDimsInt)
    
  END IF
-
- Region=Region/10.
+ 
+ SELECT CASE(FV)
+ CASE(1)
+    Region=Region/10.
+ CASE(2)
+    Region=Region/100.
+ END SELECT
+ 
  WRITE(*,*) MINVAL(Region), MAXVAL(Region)
 
  OPEN(3, file='Visu.dat', FORM='unformatted', ACCESS='direct', RECL=Vol*4)

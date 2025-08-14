@@ -1,7 +1,9 @@
+#Bitmap=ECO_LAI
+Bitmap=ECO_ALB
 
 compiler=gfortran
-Dir=/perm/fih/MY_PROJECTS/ECO-SG-ML_LAI      # Entrance point  
-                                             # (full path!! Do not write 'pwd' here)
+Dir=$HOME/GLDB_SG/ECO_SG_LAI_ML      # Entrance point  
+                              # (full path!! Do not write 'pwd' here)
 
 wrkDir=${Dir}/wrk # Working directory
 utilDir=${Dir}/util
@@ -11,9 +13,20 @@ resDir=${Dir}/res
 dataDir=${Dir}/data
 tmp_dataDir=${Dir}/tmp
 
-BitmapName1=${dataDir}/LAI_0825_c.dir
-BitmapName2=${dataDir}/ecosgml_1.dir
+echo Bitmap version is ${Bitmap}
 
+case "$Bitmap" in
+ECO_LAI)
+BitmapName1=${dataDir}/LAI_0825_c.dir
+;;
+ECO_ALB)
+BitmapName1=${dataDir}/AL_BH_VI_0825_c.dir
+;;
+esac
+echo Bitmap1 file is ${BitmapName1}
+
+BitmapName2=${dataDir}/ecosgml_1.dir
+echo Bitmap2 file is ${BitmapName2}
 
 CompString="${compiler} -c" # option to read in BYTES, NOT IN WORDS must be used!
 LinkString="${compiler} -o "

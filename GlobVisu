@@ -28,7 +28,9 @@ East=5.25
 echo 'GlobVisu ...'
 . EnvSystem
 #BitmapName=${resDir}/bitmap_lai_ml
-BitmapName=${resDir}/bitmap_lai_ml_comp
+#BitmapName=${resDir}/bitmap_lai_ml_comp
+#BitmapName=${resDir}/bitmap_alb_ml
+BitmapName=${resDir}/bitmap_alb_ml_comp
 Prg1='GlobVisu'
 rm -rf ${wrkDir}
 mkdir ${wrkDir}
@@ -36,14 +38,30 @@ ln -s ${BitmapName} ${wrkDir}/bitmap
 cp ${srcDir}/Bitmap_ML_LAI.f90 ${wrkDir}/.
 cp ${srcDir}/Coor2Num_ML_LAI.f90 ${wrkDir}/.
 cp ${utilDir}/${Prg1}.f90 ${wrkDir}/.
-cp ${utilDir}/Visu.gs ${wrkDir}/.
+cp ${utilDir}/Visu_LAI.gs ${wrkDir}/.
+cp ${utilDir}/Visu_ALB.gs ${wrkDir}/.
 cd ${wrkDir}
 ${CompString} Bitmap_ML_LAI.f90 Coor2Num_ML_LAI.f90 ${Prg1}.f90
 ${LinkString} ${Prg1}.out Bitmap_ML_LAI.o Coor2Num_ML_LAI.o ${Prg1}.o
 
+case "$Bitmap" in
+ECO_LAI)
+./${Prg1}.out $North $South $West $East 1
+;;
+ECO_ALB)
 ./${Prg1}.out $North $South $West $East 2
+;;
+esac
 
-grads -bp -c "run Visu.gs"
+case "$Bitmap" in
+ECO_LAI)
+grads -bp -c "run Visu_LAI.gs"
+;;
+ECO_ALB)
+grads -bp -c "run Visu_ALB.gs"
+;;
+esac
+
 gv Visu.eps &
 
 cd ${Dir}

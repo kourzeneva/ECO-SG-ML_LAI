@@ -2,18 +2,23 @@ PROGRAM LAI2ML
 ! PURPOSE: Converting ECO-SG adjusted LAI to ECO-SG_ML adjusted one
 ! AUTHOR:  Ekaterina Kourzeneva, 
 !          FMI, 07.2025
-
+!  
+! MODIFICATIONS:
+!
+! 08.2025 Ekaterina Kourzeneva, FMI: small updates to process the albedo fiels as well
+!
+  
  USE Bitmap_ML_LAI, ONLY : &
   NlonB_all, &                     ! Number of longitude pixels of the bitmaps
   NlatB_all, &                     ! Number of latitude pixels of the bitmaps
-  PixSize_all, &                   ! Pixel size of the LAI and ML bitmaps in seconds of arc(s)
+  PixSize_all, &                   ! Pixel size of the LAI/ALB and ML bitmaps in seconds of arc(s)
   BitmapFile_all, &                ! The initial bitmap file name
   BP_all, &                        ! Number of bytes per pixel in the bitmaps
-  WestLim_all, &                   ! Western boundaries of the LAI and ML bitmaps
-  NorthLim_all, &                  ! Northern boundaries of the LAI and ML bitmaps
-  EastLim_all, &                   ! Eastern boundaries of the LAI and ML bitmaps
-  SouthLim_all, &                  ! Southern boundaries of the LAI and ML bitmaps
-  DPixSize_all, &                  ! Pixel size decimal of the LAI and ML bitmaps
+  WestLim_all, &                   ! Western boundaries of the LAI/ALB and ML bitmaps
+  NorthLim_all, &                  ! Northern boundaries of the LAI/ALB and ML bitmaps
+  EastLim_all, &                   ! Eastern boundaries of the LAI/ALB and ML bitmaps
+  SouthLim_all, &                  ! Southern boundaries of the LAI/ALB and ML bitmaps
+  DPixSize_all, &                  ! Pixel size decimal of the LAI/ALB and ML bitmaps
   LSea_all,  &                     ! Legends for sea, lake, river for different maps
   LLake_all, &
   LRiver_all 
@@ -27,8 +32,10 @@ PROGRAM LAI2ML
    END SUBROUTINE CHAR_TO_REAL
  END INTERFACE
 
- CHARACTER(13), PARAMETER :: Bitmap_file_out='bitmap_lai_ml' ! Output file name, uncompressed
- CHARACTER(18), PARAMETER :: Bitmap_file_out_comp='bitmap_lai_ml_comp' ! Output file name, compressed
+ INTEGER :: FV    ! Field version: 1 is LAI, 2 is albedo
+
+ CHARACTER(13) :: Bitmap_file_out ! Output file name, uncompressed
+ CHARACTER(18) :: Bitmap_file_out_comp ! Output file name, compressed
  LOGICAL, PARAMETER :: LWUC=.FALSE. ! If we want to write uncompressed data.
                                     ! Here, we make a choice between writing compressed and uncompressed data.
                                     ! The default is writing the compressed data.
@@ -36,11 +43,11 @@ PROGRAM LAI2ML
                                     ! Compression is performed anyway, although the results are not written.
                                     ! This is not optimal of course and may be changed in future.
                                     ! Note that the output file names differ for the compressed and uncompressed cases:
-                                    ! bitmap_lai_ml and bitmap_lai_ml_comp, see above.
+                                    ! bitmap_*_ml and bitmap_*_ml_comp, see the code below.
  
- INTEGER(1), PARAMETER :: L_UDEF=90 ! Undefined value for LAI
+ INTEGER(1), PARAMETER :: L_UDEF=-90 ! Undefined value for LAI/ALB
 
- INTEGER :: NorthPix , SouthPix , WestPix , EastPix ! Boundaries of the ML map in pixels of the LAI map
+ INTEGER :: NorthPix , SouthPix , WestPix , EastPix ! Boundaries of the ML map in pixels of the LAI/ALB map
 
  CHARACTER(LEN=4), DIMENSION(:), ALLOCATABLE :: LonDimsChar, LonDimsChar_ML
  INTEGER(4), DIMENSION(:), ALLOCATABLE :: LonDimsInt, LonDimsInt_ML
@@ -48,9 +55,9 @@ PROGRAM LAI2ML
  REAL, DIMENSION(:), ALLOCATABLE :: LonPixDatCompReal 
  INTEGER(2), DIMENSION(:), ALLOCATABLE :: LonPixDatCompInt_ML
 
- REAL, DIMENSION(:), ALLOCATABLE :: WLonPixDat_LAI  ! Working array for LAI
+ REAL, DIMENSION(:), ALLOCATABLE :: WLonPixDat_LAI  ! Working array for LAI/ALB
  INTEGER, DIMENSION(:), ALLOCATABLE :: IWLonPixDat_LAI
- REAL, DIMENSION(:,:), ALLOCATABLE :: WLonPixDat_LAI_ML ! Working array for LAI_ML
+ REAL, DIMENSION(:,:), ALLOCATABLE :: WLonPixDat_LAI_ML ! Working array for LAI_ML/ALB_ML
  INTEGER(1), DIMENSION(:,:), ALLOCATABLE :: IWLonPixDat_LAI_ML
  INTEGER(2), DIMENSION(:,:), ALLOCATABLE :: IWLonPixDat_LAI_ML_out
 
@@ -65,25 +72,46 @@ PROGRAM LAI2ML
  INTEGER :: klon_0, klat_ml
  INTEGER(8) :: iPos, iiPos
  INTEGER :: ErCode
+ CHARACTER *80 :: CHIN
  INTEGER(1) :: LAI_Found
  LOGICAL :: LatDone, LonDone, LFound, L0, L00
 
  !--------------------------------------------------------------------------------------------
 
- ! Calculate all the parameters of the LAI and ML bitmaps
+! Is it LAI or ALB?
+ 
+ IF(iargc().EQ.0) THEN
+    WRITE(*,*) 'IS IT LAI OR ALB FIELD? PLEASE SPECIFY!'
+    STOP
+ END IF
+ CALL GETARG(1, CHIN)
+ READ(CHIN,'(I4)') FV
+
+ SELECT CASE(FV)
+    CASE(1)
+       WRITE(*,*) 'Bitmap is LAI_*_c.dir'
+       Bitmap_file_out='bitmap_lai_ml'
+       Bitmap_file_out_comp='bitmap_lai_ml_comp'
+    CASE(2)
+       WRITE(*,*) 'Bitmap is AL_*_c.dir'
+       Bitmap_file_out='bitmap_alb_ml'
+       Bitmap_file_out_comp='bitmap_alb_ml_comp'
+ END SELECT
+
+ ! Calculate all the parameters of the LAI/ALB and ML bitmaps
 
  DPixSize_all=PixSize_all/3600._8
  EastLim_all=WestLim_all+NlonB_all*DPixSize_all
  SouthLim_all=NorthLim_all-NlatB_all*DPixSize_all
 
- WRITE(*,*) 'Parameters of maps are (LAI, ML):'
+ WRITE(*,*) 'Parameters of maps are (LAI/ALB, ML):'
  WRITE(*,*) 'DPixSize: ', DPixSize_all(1), DPixSize_all(2)
  WRITE(*,*) 'WestLim: ', WestLim_all(1), WestLim_all(2)
  WRITE(*,*) 'EastLim: ', EastLim_all(1), EastLim_all(2)
  WRITE(*,*) 'NorthLim: ', NorthLim_all(1), NorthLim_all(2)
  WRITE(*,*) 'SouthLim: ', SouthLim_all(1), SouthLim_all(2)
 
- ! Calculate boundaries of the ML map in pixel space of the LAI map
+ ! Calculate boundaries of the ML map in pixel space of the LAI/ALB map
 
  CALL Coor2Num_ML_LAI(1, NorthLim_all(2), 2, NorthPix, ErCode)
  IF(ErCode.NE.0) STOP
@@ -94,7 +122,7 @@ PROGRAM LAI2ML
  CALL Coor2Num_ML_LAI(1, EastLim_all(2),  1, EastPix,  ErCode)
  IF(ErCode.NE.0) STOP
 
- WRITE(*,*) 'Boundaries the ML map in pixel space of the LAI map:'
+ WRITE(*,*) 'Boundaries the ML map in pixel space of the LAI/ALB map:'
  WRITE(*,*) 'North_Pix= ', NorthPix, ' SouthPix= ', SouthPix
  WRITE(*,*) 'WestPix= ' , WestPix,  ' EastPix= ' , EastPix
 
@@ -115,18 +143,18 @@ PROGRAM LAI2ML
  ALLOCATE(LonDimsChar_ML(NlatB_all(2))) 
  ALLOCATE(LonDimsInt_ML(NlatB_all(2)))
 
- ! Read governing info for the LAI map: line of dimensions in lon
+ ! Read governing info for the LAI/ALB map: line of dimensions in lon
 
  READ(1) LonDimsChar
  LonDimsInt=TRANSFER(LonDimsChar,1_4,NlatB_all(1)) 
 
-! Move the "cursor" to the initial position on the LAI map
+! Move the "cursor" to the initial position on the LAI/ALB map
  iPos=NLatB_all(1)*4+1
  DO ilat_lai=1,NorthPix-1
     iPos=iPos+LonDimsInt(ilat_lai)*2
  END DO
 
-! Move the "cursor" to the initial position of the LAI_ML map,
+! Move the "cursor" to the initial position of the LAI_ML/ALB_ML map,
 ! leaving space for the governing info
  iiPos=NLatB_all(2)*4+1
  
@@ -140,7 +168,7 @@ PROGRAM LAI2ML
 
     klat_ml=0
     
-    LatPixN_LAI=NorthLim_all(1)-(ilat_lai-1)*DPixSize_all(1) ! Calculate coordinates of the boundaries of the LAI pixel
+    LatPixN_LAI=NorthLim_all(1)-(ilat_lai-1)*DPixSize_all(1) ! Calculate coordinates of the boundaries of the LAI/ALB pixel
     LatPixS_LAI=LatPixN_LAI-DPixSize_all(1)
 
     DO
@@ -162,7 +190,7 @@ PROGRAM LAI2ML
     ALLOCATE(IWLonPixDat_LAI_ML_out(NLonB_all(2),klat_ml))
     ALLOCATE(IWLonPixDat_ML(NLonB_all(2),klat_ml))
         
-! Read the LAI data    
+! Read the LAI/ALB data    
     ALLOCATE(LonPixDatCompChar(LonDimsInt(ilat_lai)))
     ALLOCATE(LonPixDatCompReal(LonDimsInt(ilat_lai)))
     READ(1,pos=iPos) LonPixDatCompChar
@@ -198,16 +226,16 @@ PROGRAM LAI2ML
     DEALLOCATE(LonPixDatCompChar)
     DEALLOCATE(LonPixDatCompReal)
 
-    write(*,*)  ilat_lai, MAXVAL(WLonPixDat_LAI), MINVAL(WLonPixDat_LAI), 'LAI line read ... '
+    write(*,*)  ilat_lai, MAXVAL(WLonPixDat_LAI), MINVAL(WLonPixDat_LAI), 'LAI/ALB line read ... '
 
-    ! Interpolate LAI to the finer resolution with the nearest neighbour metod (just repeating values)
+    ! Interpolate LAI/ALB to the finer resolution with the nearest neighbour metod (just repeating values)
     
     ilon_ml=1
     LonDone=.FALSE.
 
     DO ilon_lai=WestPix, EastPix
        
-      LonPixW_LAI=WestLim_all(1)+(ilon_lai-1)*DPixSize_all(1) ! Calculate coordinates of the boundaries of the LAI pixel
+      LonPixW_LAI=WestLim_all(1)+(ilon_lai-1)*DPixSize_all(1) ! Calculate coordinates of the boundaries of the LAI/ALB pixel
       LonPixE_LAI=LonPixW_LAI+DPixSize_all(1)
       DO
          LonPix_ML=WestLim_all(2)+(ilon_ml-1)*DPixSize_all(2)
@@ -235,7 +263,7 @@ PROGRAM LAI2ML
       irec_ml=irec_ml+1
     END DO
 
-    ! Adjust LAI to the ML Covers
+    ! Adjust LAI/ALB to the ML Covers
     DO ilat_w=1,klat_ml
        DO ilon_w=1,NLonB_all(2)
           IF ((IWLonPixDat_ML(ilon_w,ilat_w).EQ.LSea_all(2)).OR. &
@@ -252,7 +280,7 @@ PROGRAM LAI2ML
        END DO
     END DO
 
-    ! Fast extrapolation of LAI to the points where it was water, but now it is not
+    ! Fast extrapolation of LAI/ALB to the points where it was water, but now it is not
     ! Extrapolation algorithm may be improved in future, although works satisfactory for this task
     DO ilat_w=1,klat_ml
        LFOUND=.FALSE.
@@ -279,7 +307,7 @@ PROGRAM LAI2ML
        END DO
     END DO
 
-    ! Combining the new LAI with the new covers (from ECO_ML) 
+    ! Combining the new LAI/ALB with the new covers (from ECO_ML) 
     DO ilat_w=1,klat_ml
        DO ilon_w=1,NLonB_all(2)
           IF(IWLonPixDat_LAI_ML(ilon_w,ilat_w).EQ.0) THEN
@@ -290,7 +318,7 @@ PROGRAM LAI2ML
        END DO
     END DO
 
-    ! Compressing the new LAI
+    ! Compressing the new LAI/ML
     
     DO ilat_w=1,klat_ml
 
@@ -307,7 +335,7 @@ PROGRAM LAI2ML
                ilon_lai_ml=ilon_lai_ml+1
                L0=.FALSE.
             END IF
-            IF(klon_0.LT.28766) THEN ! 28767=32767-4000-1
+            IF(klon_0.LT.28766) THEN ! 28766=32767-4000-1
                L00=.TRUE.
             ELSE
                ilon_lai_ml=ilon_lai_ml+1
@@ -343,7 +371,7 @@ PROGRAM LAI2ML
                ilon_lai_ml=ilon_lai_ml+1
                L0=.FALSE.
             END IF
-            IF(klon_0.LT.28766) THEN ! 28767=32767-4000-1
+            IF(klon_0.LT.28766) THEN ! 28766=32767-4000-1
                L00=.TRUE.
             ELSE
                LonPixDatCompInt_ML(ilon_lai_ml-1) = klon_0+4000 
