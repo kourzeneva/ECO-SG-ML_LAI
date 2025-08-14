@@ -1,16 +1,16 @@
 # ECO-SG-ML_LAI
 
-This is a tool to collocate the LAI data with the land cover data from the ECO-SG-ML map.
+This is a tool to collocate the LAI and albedo data with the land cover data from the ECO-SG-ML map.
 
 ## Method:
 
 The tool:
-* Reads the compressed global LAI data, combined with the ECO-SG covers
+* Reads the compressed global LAI/ALB data, combined with the ECO-SG covers
 * Reads the ECO-SG-ML cover data
-* Clips the area from the LAI data corresponding the ECO-SG-ML map (Europe)
-* Interpolates the LAI data on the ECO-SG-ML grid with the nearest neighbour method (simply repeating pixels)
-* Extrapolates the LAI data to the areas where a new land appears according to the ECO-SG-ML
-* Combines the new LAI with the ECO-SG-ML covers, compresses and writes the new fields.
+* Clips the area from the LAI/ALB data corresponding the ECO-SG-ML map (Europe)
+* Interpolates the LAI/ALB data on the ECO-SG-ML grid with the nearest neighbour method (simply repeating pixels)
+* Extrapolates the LAI/ALB data to the areas where a new land appears according to the ECO-SG-ML
+* Combines the new LAI/ALB with the ECO-SG-ML covers, compresses and writes the new fields.
 
 ## Description:
 
@@ -32,7 +32,9 @@ The tool:
 2. Make links to files with ECO-SG-ML cover data and LAI data. From `ECO-SG-ML_LAI/data`:
     
    `ln -s .../ecosgml_1.dir . `   
-   `ln -s .../LAI_????_c.dir . ` 
+   `ln -s .../LAI_????_c.dir . `   
+   or   
+   `ln -s .../AL_??_??_????_c.dir . `
 
 Note! 
 - The tool works only with ECO-SG-ML cover map in `INTEGER(1)`
@@ -50,9 +52,10 @@ Note!
    `mkdir scripts`
    
 4. Edit the file `Env_system`. Variables to be adjusted to your setup are:
-
+   
+   `Bitmap` - to switch between LAI and albedo (`ECO_LAI/ECO_ALB`)   
    `Dir` - enter the directory path here  
-   `BitmapName1`, `BitmapName2` - file names for the ECO-SG-ML and LAI data 
+   `BitmapName1`, `BitmapName2` - file names for the ECO-SG-ML and LAI data. Be sure that for the `BitmapName1`, the corresponding LAI/ALB file names are specified. 
 
 5. Run the `LAI2ML` script. From `ECO-SG-ML_LAI`:
 
@@ -62,13 +65,18 @@ Note!
    
    Note! The "endian" problem may appear, since the binary files are processed. The tool was tested on the laptop and ECMWF mashine, but still, the problem may happen.
 
-6. Results can be found in the file `wrk/bitmap_lai_ml_comp`. This file is of appr. 10G. It should be moved to the `res` directory manually and renamed as the used wants. Something like:
+6. Results can be found in the file `wrk/bitmap_lai_ml_comp` or `wrk/bitmap_lai_ml_comp`, depending on the processed field. This file is of appr. 10G. It should be moved to the `res` directory manually and renamed as the used wants. Something like:
 
    `mv wrk/bitmap_lai_ml_comp res/.`  
-   `mv res/bitmap_lai_ml_comp res/LAI_????_c_ml.dir`
+   `mv res/bitmap_lai_ml_comp res/LAI_????_c_ml.dir`   
+
+   or
+
+   `mv wrk/bitmap_alb_ml_comp res/.`  
+   `mv res/bitmap_alb_ml_comp res/AL_??_??_????_c_ml.dir`     
 
    The tool does not create the `*.hdr` files, this should be done manually.
    
-7. Main parameters of the fields can be found in `src/Bitmap_ML_LAI.f90`. They can be changed, but one need to be careful, of course.
+8. Main parameters of the fields can be found in `src/Bitmap_ML_LAI.f90`. They can be changed, but one need to be careful, of course.
 
-8. Visualisation tool `GlobVisu` comes without documentation at the moment.  
+9. Visualisation tool `GlobVisu` comes without documentation at the moment.  
