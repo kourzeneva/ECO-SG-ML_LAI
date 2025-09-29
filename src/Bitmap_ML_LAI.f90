@@ -17,8 +17,10 @@ MODULE Bitmap_ML_LAI
 
  CHARACTER(14), PARAMETER, DIMENSION(2) :: BitmapFile_all = (/'bitmap_LAI_ALB','bitmap_ML     '/) ! The LAI/ALB and ML bitmap file names
 
- INTEGER, PARAMETER :: NMaskedCovers = 3 ! Number of masked covers
- INTEGER, PARAMETER, DIMENSION(3) :: MaskedCovers = (/1, 2, 3/) ! List of covers to be masked: sea, lake, river
+ INTEGER, PARAMETER, DIMENSION(2) :: NMaskedCovers_all = (/6, 3/)  ! Number of masked covers for all fields. Lists of covers to be masked are defined in InitMask
+  
+ INTEGER :: NMaskedCovers ! Number of masked covers
+ INTEGER, DIMENSION(:), ALLOCATABLE :: MaskedCovers ! List of covers to be masked, for the chosen field
  
  INTEGER, PARAMETER, DIMENSION(2) :: BP_all = (/ 2, 1 /) ! Number of bytes per pixel, for different maps
 
@@ -33,12 +35,7 @@ MODULE Bitmap_ML_LAI
  INTEGER :: NlonB, & ! Number of longitude pixels of the specific bitmap
             NlatB    ! Number of latitude pixels of the specific bitmap
 
- REAL(8) :: PixSize
-! INTEGER :: PixSize ! Pixel size of the specific bitmap
-
- INTEGER :: LSea,  & !  Legends for sea, lake, river of the specific bitmap
-             LLake, &
-             LRiver
+ REAL(8) :: PixSize ! Pixel size of the specific bitmap
 
  INTEGER :: BP ! Number of bytes per pixel of the specific bitmap
  
@@ -51,11 +48,34 @@ CONTAINS
    NlonB=NlonB_all(BV)
    NlatB=NlatB_all(BV)
    PixSize=PixSize_all(BV)
-!   LSea=LSea_all(BV)
-!   LLake=LLake_all(BV)
-!   LRiver=LRiver_all(BV)
    BP=BP_all(BV)
    
  END SUBROUTINE InitMap
+
+ SUBROUTINE InitField(FV) ! To choose a field
+   IMPLICIT NONE
+   TYPE MaskedCoversType
+      INTEGER, DIMENSION(:), ALLOCATABLE :: MaskedCovers_field ! Lists of covers to be masked, for all fields
+   END TYPE MaskedCoversType
+   INTEGER, INTENT(IN) :: FV ! Bitmap version
+   TYPE(MaskedCoversType), DIMENSION(3) :: MaskedCovers_all
+   INTEGER :: ifield
+
+   ! Covers to be masked for different fields are defined here
+   DO ifield=1,2
+      ALLOCATE(MaskedCovers_all(ifield)%MaskedCovers_field(NMaskedCovers_all(ifield)))
+   END DO
+   MaskedCovers_all(1)%MaskedCovers_field = (/1, 2, 3, 4, 5, 6/) ! For LAI: sea, lake, river, bare land, bare rock, permanent snow
+   MaskedCovers_all(2)%MaskedCovers_field = (/1, 2, 3/) ! For ALB: sea, lake, river
+
+   ! Choice of the particular field
+   NMaskedCovers = NMaskedCovers_all(FV)
+   ALLOCATE(MaskedCovers(NMaskedCovers))
+   MaskedCovers=MaskedCovers_all(FV)%MaskedCovers_field
+
+   DO ifield=1,2
+      DEALLOCATE(MaskedCovers_all(ifield)%MaskedCovers_field)
+   END DO
+ END SUBROUTINE InitField
  
 END MODULE Bitmap_ML_LAI

@@ -20,7 +20,8 @@ PROGRAM LAI2ML
   SouthLim_all, &                  ! Southern boundaries of the LAI/ALB and ML bitmaps
   DPixSize_all, &                  ! Pixel size decimal of the LAI/ALB and ML bitmaps
   NMaskedCovers, &                 ! Number of masked covers
-  MaskedCovers                     ! List of covers to be masked
+  MaskedCovers, &                  ! List of covers to be masked
+  InitField                        ! To choose a field
 
  IMPLICIT NONE
 
@@ -96,7 +97,12 @@ PROGRAM LAI2ML
        WRITE(*,*) 'Bitmap is AL_*_c.dir'
        Bitmap_file_out='bitmap_alb_ml'
        Bitmap_file_out_comp='bitmap_alb_ml_comp'
+    CASE DEFAULT
+       WRITE(*,*) 'Which field to process? Numbers between 1 and 2 are possible'
+       STOP
  END SELECT
+
+ CALL InitField(FV)
 
  ! Calculate all the parameters of the LAI/ALB and ML bitmaps
 
@@ -465,6 +471,7 @@ PROGRAM LAI2ML
  DEALLOCATE(IWLonPixDat_LAI)
  DEALLOCATE(LonDimsChar_ML)
  DEALLOCATE(LonDimsInt_ML)
+ DEALLOCATE(MaskedCovers)
 
 END PROGRAM LAI2ML
 !-------------------------------------------------------------------------------------
