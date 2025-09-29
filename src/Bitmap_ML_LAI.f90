@@ -7,18 +7,18 @@ MODULE Bitmap_ML_LAI
 ! MODIFICATIONS:
 !
 ! 08.2025 Ekaterina Kourzeneva, FMI: small updates to process the albedo fiels as well
+! 09.2025 Ekaterina Kourzeneva, FMI: corrections to make the list of masked covers to be more general 
 !  
  IMPLICIT NONE
- 
+
  INTEGER, PARAMETER, DIMENSION(2) :: NlonB_all = (/ 129600, 137600 /) , & ! Number of longitude pixels of the LAI/ALB and ML bitmaps
                                      NlatB_all = (/ 50400,  96600 /)      ! Number of latitude pixels of the LAI/ALB and ML bitmaps
  REAL(8), PARAMETER, DIMENSION(2) :: PixSize_all = (/ 10.0_8, 1.94036112_8 /)      ! Pixel size of the LAI/ALB and ML bitmaps in seconds of arc(s)
 
  CHARACTER(14), PARAMETER, DIMENSION(2) :: BitmapFile_all = (/'bitmap_LAI_ALB','bitmap_ML     '/) ! The LAI/ALB and ML bitmap file names
 
- INTEGER, PARAMETER, DIMENSION(2) :: LSea_all = (/ 0, 1 /),  &   !  Legends for sea, lake, river for different maps
-                                     LLake_all = (/ 0, 2 /), &
-                                     LRiver_all = (/ 0, 3 /)
+ INTEGER, PARAMETER :: NMaskedCovers = 3 ! Number of masked covers
+ INTEGER, PARAMETER, DIMENSION(3) :: MaskedCovers = (/1, 2, 3/) ! List of covers to be masked: sea, lake, river
  
  INTEGER, PARAMETER, DIMENSION(2) :: BP_all = (/ 2, 1 /) ! Number of bytes per pixel, for different maps
 
@@ -51,9 +51,9 @@ CONTAINS
    NlonB=NlonB_all(BV)
    NlatB=NlatB_all(BV)
    PixSize=PixSize_all(BV)
-   LSea=LSea_all(BV)
-   LLake=LLake_all(BV)
-   LRiver=LRiver_all(BV)
+!   LSea=LSea_all(BV)
+!   LLake=LLake_all(BV)
+!   LRiver=LRiver_all(BV)
    BP=BP_all(BV)
    
  END SUBROUTINE InitMap

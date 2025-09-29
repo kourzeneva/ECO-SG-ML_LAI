@@ -6,7 +6,7 @@ PROGRAM LAI2ML
 ! MODIFICATIONS:
 !
 ! 08.2025 Ekaterina Kourzeneva, FMI: small updates to process the albedo fiels as well
-!
+! 09.2025 Ekaterina Kourzeneva, FMI: corrections to make the list of masked covers to be more general
   
  USE Bitmap_ML_LAI, ONLY : &
   NlonB_all, &                     ! Number of longitude pixels of the bitmaps
@@ -19,9 +19,8 @@ PROGRAM LAI2ML
   EastLim_all, &                   ! Eastern boundaries of the LAI/ALB and ML bitmaps
   SouthLim_all, &                  ! Southern boundaries of the LAI/ALB and ML bitmaps
   DPixSize_all, &                  ! Pixel size decimal of the LAI/ALB and ML bitmaps
-  LSea_all,  &                     ! Legends for sea, lake, river for different maps
-  LLake_all, &
-  LRiver_all 
+  NMaskedCovers, &                 ! Number of masked covers
+  MaskedCovers                     ! List of covers to be masked
 
  IMPLICIT NONE
 
@@ -71,10 +70,11 @@ PROGRAM LAI2ML
  INTEGER :: ilat_w, ilon_w
  INTEGER :: klon_0, klat_ml
  INTEGER(8) :: iPos, iiPos
+ INTEGER :: icov
  INTEGER :: ErCode
  CHARACTER *80 :: CHIN
  INTEGER(1) :: LAI_Found
- LOGICAL :: LatDone, LonDone, LFound, L0, L00
+ LOGICAL :: LatDone, LonDone, LFOUND, L0, L00, LMask
 
  !--------------------------------------------------------------------------------------------
 
@@ -266,17 +266,21 @@ PROGRAM LAI2ML
     ! Adjust LAI/ALB to the ML Covers
     DO ilat_w=1,klat_ml
        DO ilon_w=1,NLonB_all(2)
-          IF ((IWLonPixDat_ML(ilon_w,ilat_w).EQ.LSea_all(2)).OR. &
-               (IWLonPixDat_ML(ilon_w,ilat_w).EQ.LLake_all(2)).OR. &
-               (IWLonPixDat_ML(ilon_w,ilat_w).EQ.LRiver_all(2))) THEN
-             IWLonPixDat_LAI_ML(ilon_w,ilat_w) = 0
-          ELSE
-             IF ((IWLonPixDat_LAI_ML(ilon_w,ilat_w).EQ.LSea_all(1)).OR. &
-                  (IWLonPixDat_LAI_ML(ilon_w,ilat_w).EQ.LLake_all(1)).OR. &
-                  (IWLonPixDat_LAI_ML(ilon_w,ilat_w).EQ.LRiver_all(1))) THEN
-                IWLonPixDat_LAI_ML(ilon_w,ilat_w) = L_UDEF
+
+          LMask=.FALSE.
+          DO icov=1,NMaskedCovers
+             IF (IWLonPixDat_ML(ilon_w,ilat_w).EQ.MaskedCovers(icov)) THEN
+                IWLonPixDat_LAI_ML(ilon_w,ilat_w) = 0
+                LMask=.TRUE.
+                EXIT
+             END IF
+          END DO
+          IF (.NOT.LMask) THEN
+             IF (IWLonPixDat_LAI_ML(ilon_w,ilat_w).EQ.0) THEN
+                 IWLonPixDat_LAI_ML(ilon_w,ilat_w) = L_UDEF
              END IF
           END IF
+         
        END DO
     END DO
 
