@@ -3,7 +3,7 @@ echo 'LAI2ML ...'
 Prg1='LAI2ML'
 rm -rf ${wrkDir}
 mkdir ${wrkDir}
-ln -s ${BitmapName1} ${wrkDir}/bitmap_LAI_ALB
+ln -s ${BitmapName1} ${wrkDir}/bitmap_LAI_ALB_TH
 ln -s ${BitmapName2} ${wrkDir}/bitmap_ML
 cp ${srcDir}/Bitmap_ML_LAI.f90 ${wrkDir}/.
 cp ${srcDir}/Coor2Num_ML_LAI.f90 ${wrkDir}/.
@@ -19,6 +19,9 @@ ECO_LAI)
 ;;
 ECO_ALB)
 ./${Prg1}.out 2
+;;
+ECO_TH)
+./${Prg1}.out 3
 ;;
 esac
 

@@ -1,5 +1,6 @@
 #Bitmap=ECO_LAI
-Bitmap=ECO_ALB
+#Bitmap=ECO_ALB
+Bitmap=ECO_TH
 
 compiler=gfortran
 Dir=$HOME/GLDB_SG/ECO_SG_LAI_ML      # Entrance point  
@@ -21,6 +22,9 @@ BitmapName1=${dataDir}/LAI_0825_c.dir
 ;;
 ECO_ALB)
 BitmapName1=${dataDir}/AL_BH_VI_0825_c.dir
+;;
+ECO_TH)
+BitmapName1=${dataDir}/new_ht_c.dir
 ;;
 esac
 echo Bitmap1 file is ${BitmapName1}

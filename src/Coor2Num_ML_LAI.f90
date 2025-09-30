@@ -1,4 +1,4 @@
-SUBROUTINE Coor2Num_ML_LAI(BV,Coord, Axis, Num, ErCode) 
+SUBROUTINE Coor2Num_ML_LAI(Coord, Axis, Num, ErCode) 
 ! PURPOSE: To convert coordinate in degrees to number of nearest pixel of the bitmap
 ! AUTHOR:  Ekaterina Kourzeneva, 
 !          RSHU
@@ -6,18 +6,16 @@ SUBROUTINE Coor2Num_ML_LAI(BV,Coord, Axis, Num, ErCode)
 !          possibility to use different bitmaps is added
 
  USE Bitmap_ML_LAI, ONLY : &
-  NlonB_all,    &  ! Number of longitude pixels of the LAI and ML bitmaps
-  NlatB_all,    &  ! Number of latitude pixels of the LAI and ML bitmaps
-  WestLim_all,  &  ! Western boundaries of the LAI and ML bitmaps
-  NorthLim_all, &  ! Northern boundaries of the LAI and ML bitmaps
-  EastLim_all,  &  ! Eastern boundaries of the LAI and ML bitmaps
-  SouthLim_all, &  ! Southern boundaries of the LAI and ML bitmaps 
-  DPixSize_all     ! Pixel size decimal
-
+  NlonB, &                         ! Number of longitude pixels of the specific bitmap
+  NlatB, &                         ! Number of latitude pixels of the specific bitmap
+  WestLim,  &                      ! Western boundary of the current bitmap
+  NorthLim, &                      ! Northern boundary of the current bitmap
+  EastLim,  &                      ! Eastern boundary of the current bitmap
+  SouthLim, &                      ! Southern boundary of the current bitmap
+  DPixSize                         ! Pixel size decimal of the specific bitmap
 
  IMPLICIT NONE
 
- INTEGER, INTENT(IN) :: BV ! Bitmap version
  REAL(KIND=8), INTENT(IN) :: Coord ! The coordinate in DEGREES (with decimal digits!!!)
  INTEGER, INTENT(IN) :: Axis ! The axis: 1 - longitude, degrees from -180 to 180
                              !           2 - latitude, degrees from -90 to 90
@@ -29,9 +27,9 @@ SUBROUTINE Coor2Num_ML_LAI(BV,Coord, Axis, Num, ErCode)
 
  SELECT CASE(Axis) ! Choose axis
   CASE (1)
-   IF(Coord.LT.WestLim_all(BV).OR.Coord.GT.EastLim_all(BV)) THEN
+   IF(Coord.LT.WestLim.OR.Coord.GT.EastLim) THEN
     Num=0
-    write(*,*) 'Longitude should be within the interval of ', WestLim_all(BV), ' and ', EastLim_all(BV)
+    write(*,*) 'Longitude should be within the interval of ', WestLim, ' and ', EastLim
     ErCode = 1
     RETURN
    END IF
@@ -39,12 +37,12 @@ SUBROUTINE Coor2Num_ML_LAI(BV,Coord, Axis, Num, ErCode)
 !!   Num=INT((180.+MIN(Coord,179.999))*3600/PixSize)+1
 !   Num=NINT((Coord-WestLim)*3600/PixSize)+1
    !   Num=NINT((Coord-WestLim_all(BV))*3600._8/PixSize_all(BV))+1
-   Num=INT((Coord-WestLim_all(BV))/DPixSize_all(BV))+1
+   Num=INT((Coord-WestLim)/DPixSize)+1
    ErCode = 0
   CASE (2)
-   IF(Coord.LT.SouthLim_all(BV).OR.Coord.GT.NorthLim_all(BV)) THEN
+   IF(Coord.LT.SouthLim.OR.Coord.GT.NorthLim) THEN
     Num=0
-    write(*,*) 'Latitude should be within the interval of', SouthLim_all(BV), ' and ', NorthLim_all(BV)
+    write(*,*) 'Latitude should be within the interval of', SouthLim, ' and ', NorthLim
     ErCode = 1
     RETURN
    END IF
@@ -53,7 +51,7 @@ SUBROUTINE Coor2Num_ML_LAI(BV,Coord, Axis, Num, ErCode)
 !!    Num=NlatB-(INT((60.+MIN(Coord,79.999))*3600/PixSize)+1)+1
 !    Num=NlatB-(NINT((Coord-SouthLim)*3600/PixSize)+1)+1
  !    Num=NlatB_all(BV)-(NINT((Coord-SouthLim_all(BV))*3600._8/PixSize_all(BV))+1)+1
-   Num=NlatB_all(BV)-(INT((Coord-SouthLim_all(BV))/DPixSize_all(BV))+1)+1
+   Num=NlatB-(INT((Coord-SouthLim)/DPixSize)+1)+1
 !!    Num=NINT((Coord-SouthLim)*3600/PixSize)+1
     ErCode = 0
   CASE DEFAULT

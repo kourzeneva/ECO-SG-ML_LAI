@@ -1,3 +1,9 @@
+#Helsinki small
+North=61.0
+South=60.0
+West=24.5
+East=25.5
+
 #North=60.5
 #South=59.5
 #West=29.5
@@ -10,10 +16,10 @@
 #East=6.25
 
 # Lion
-North=46.25
-South=45.75
-West=4.75
-East=5.25
+#North=46.25
+#South=45.75
+#West=4.75
+#East=5.25
 
 #North=60.5
 #South=59.5
@@ -30,7 +36,8 @@ echo 'GlobVisu ...'
 #BitmapName=${resDir}/bitmap_lai_ml
 #BitmapName=${resDir}/bitmap_lai_ml_comp
 #BitmapName=${resDir}/bitmap_alb_ml
-BitmapName=${resDir}/bitmap_alb_ml_comp
+#BitmapName=${resDir}/bitmap_alb_ml_comp
+BitmapName=${resDir}/bitmap_th_ml_comp
 Prg1='GlobVisu'
 rm -rf ${wrkDir}
 mkdir ${wrkDir}
@@ -40,6 +47,7 @@ cp ${srcDir}/Coor2Num_ML_LAI.f90 ${wrkDir}/.
 cp ${utilDir}/${Prg1}.f90 ${wrkDir}/.
 cp ${utilDir}/Visu_LAI.gs ${wrkDir}/.
 cp ${utilDir}/Visu_ALB.gs ${wrkDir}/.
+cp ${utilDir}/Visu_TH.gs ${wrkDir}/.
 cd ${wrkDir}
 ${CompString} Bitmap_ML_LAI.f90 Coor2Num_ML_LAI.f90 ${Prg1}.f90
 ${LinkString} ${Prg1}.out Bitmap_ML_LAI.o Coor2Num_ML_LAI.o ${Prg1}.o
@@ -51,6 +59,9 @@ ECO_LAI)
 ECO_ALB)
 ./${Prg1}.out $North $South $West $East 2
 ;;
+ECO_TH)
+./${Prg1}.out $North $South $West $East 3
+;;
 esac
 
 case "$Bitmap" in
@@ -59,6 +70,9 @@ grads -bp -c "run Visu_LAI.gs"
 ;;
 ECO_ALB)
 grads -bp -c "run Visu_ALB.gs"
+;;
+ECO_TH)
+grads -bp -c "run Visu_TH.gs"
 ;;
 esac
 

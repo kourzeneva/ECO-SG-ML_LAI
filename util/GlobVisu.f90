@@ -8,15 +8,23 @@ PROGRAM GlobVisu
 !
 
  USE Bitmap_ML_LAI, ONLY : &
-  NlonB_all, &                         ! Number of longitude pixels of all bitmaps
-  NlatB_all, &                         ! Number of latitude pixels of all bitmaps
-  WestLim_all, &                       ! Western boundaries of all bitmaps
-  NorthLim_all, &                      ! Northern boundaries of all bitmaps
-  EastLim_all, &                       ! Eastern boundaries of all bitmaps
-  SouthLim_all, &                      ! Southern boundaries of all bitmaps
-  PixSize_all, &                       ! Pixel size of the bitmap in seconds of arc of all bitmaps
-  DPixSize_all, &                      ! Pixel size decimal of all bitmaps
-  BP_all                               ! Number of bytes per pixel of all bitmaps
+  NlonB_gov_out, &                     ! Number of longitude pixels of ML and the output LAI/ALB and bitmaps
+  NlatB_gov_out, &                     ! Number of latitude pixels of the LAI/ALB and ML bitmaps
+  NlonB, &                             ! Number of longitude pixels of the specific bitmap
+  NlatB, &                             ! Number of latitude pixels of the specific bitmap
+  WestLim_gov_out, &                   ! Western boundary of the ML and output LAI/ALB bitmaps
+  NorthLim_gov_out, &                  ! Northern boundary of the ML and output LAI/ALB and bitmaps 
+  EastLim_gov_out, &                   ! Eastern boundary of the ML and output LAI/ALB bitmaps
+  SouthLim_gov_out, &                  ! Southern boundary of the ML and output LAI/ALB bitmaps
+  WestLim,  &                          ! Western boundary of the current bitmap
+  NorthLim, &                          ! Northern boundary of the current bitmap
+  EastLim,  &                          ! Eastern boundary of the current bitmap
+  SouthLim, &                          ! Southern boundary of the current bitmap 
+  PixSize_gov_out, &                   ! Pixel size of the LAI/ALB and ML bitmaps in seconds of arc(s)
+  DPixSize_gov_out, &                  ! Pixel size decimal of the ML and output map
+  DPixSize, &                          ! Pixel size decimal of the specific bitmap
+  BP_gov, &                            ! Number of bytes per pixel, for the ML map
+  Factor_out_all                       ! Multiplication factor for LAI/ALB
   
 
  IMPLICIT NONE
@@ -31,7 +39,6 @@ PROGRAM GlobVisu
          East     !
  INTEGER :: FV    ! Field version: 1 is LAI, 2 is albedo
 
- INTEGER, PARAMETER :: BV = 2 ! Bitmap version
  CHARACTER(6), PARAMETER :: BitmapFile='bitmap'
 
  INTEGER :: NorthPix, SouthPix, WestPix, EastPix ! Boundaries of visualised region in pixels
@@ -87,17 +94,25 @@ PROGRAM GlobVisu
   STOP  
  END IF
 
- DPixSize_all=PixSize_all/3600._8
- EastLim_all=WestLim_all+NlonB_all*DPixSize_all
- SouthLim_all=NorthLim_all-NlatB_all*DPixSize_all
+ DPixSize_gov_out=PixSize_gov_out/3600._8
+ EastLim_gov_out=WestLim_gov_out+NlonB_gov_out*DPixSize_gov_out
+ SouthLim_gov_out=NorthLim_gov_out-NlatB_gov_out*DPixSize_gov_out
+
+ NlonB=NlonB_gov_out
+ NlatB=NlatB_gov_out
+ WestLim=WestLim_gov_out
+ NorthLim=NorthLim_gov_out
+ EastLim=EastLim_gov_out
+ SouthLim=SouthLim_gov_out
+ DPixSize=DPixSize_gov_out
   
- CALL Coor2Num_ML_LAI(BV, North, 2, NorthPix, ErCode)
+ CALL Coor2Num_ML_LAI(North, 2, NorthPix, ErCode)
  IF(ErCode.NE.0) STOP
- CALL Coor2Num_ML_LAI(BV, South, 2, SouthPix, ErCode)
+ CALL Coor2Num_ML_LAI(South, 2, SouthPix, ErCode)
  IF(ErCode.NE.0) STOP
- CALL Coor2Num_ML_LAI(BV, West,  1, WestPix,  ErCode)
+ CALL Coor2Num_ML_LAI(West,  1, WestPix,  ErCode)
  IF(ErCode.NE.0) STOP
- CALL Coor2Num_ML_LAI(BV, East,  1, EastPix,  ErCode)
+ CALL Coor2Num_ML_LAI(East,  1, EastPix,  ErCode)
  IF(ErCode.NE.0) STOP
 
  write(*,*) 'NorthPix= ', NorthPix, ' SouthPix= ', SouthPix
@@ -109,13 +124,13 @@ PROGRAM GlobVisu
  ALLOCATE(Region(WestPix:EastPix,NorthPix:SouthPix))
  IF(SIZE(Region).NE.Vol) STOP 'Wrong size of the region !!!'
 
- ALLOCATE(LonPixDat1(NlonB_all(BV)))
- ALLOCATE(WLonPixDat(NlonB_all(BV)))
- ALLOCATE(IWLonPixDat(NlonB_all(BV)))
+ ALLOCATE(LonPixDat1(NlonB_gov_out))
+ ALLOCATE(WLonPixDat(NlonB_gov_out))
+ ALLOCATE(IWLonPixDat(NlonB_gov_out))
 
  IF(LRUC) THEN ! Uncompressed data
     
-    OPEN(1,file=TRIM(BitmapFile), FORM='unformatted', ACCESS='direct', RECL=NlonB_all(BV)*BP_all(BV))
+    OPEN(1,file=TRIM(BitmapFile), FORM='unformatted', ACCESS='direct', RECL=NlonB_gov_out*BP_gov)
     
     DO ilat=NorthPix,SouthPix
        
@@ -132,15 +147,15 @@ PROGRAM GlobVisu
 
     OPEN(1,file=TRIM(BitmapFile), FORM='unformatted', ACCESS='stream')
 
-    ALLOCATE(LonDimsChar(NlatB_all(BV)))
-    ALLOCATE(LonDimsInt(NlatB_all(BV)))
+    ALLOCATE(LonDimsChar(NlatB_gov_out))
+    ALLOCATE(LonDimsInt(NlatB_gov_out))
 
  ! Read governing info for the LAI map: line of dimensions in lon
     READ(1) LonDimsChar
-    LonDimsInt=TRANSFER(LonDimsChar,1_4,NlatB_all(BV))
+    LonDimsInt=TRANSFER(LonDimsChar,1_4,NlatB_gov_out)
     
 ! Move the "cursor" to the initial position on the LAI map
-    iPos=NLatB_all(BV)*4+1
+    iPos=NLatB_gov_out*4+1
     DO ilat_lai=1,NorthPix-1
        iPos=iPos+LonDimsInt(ilat_lai)*2
     END DO
@@ -164,7 +179,7 @@ PROGRAM GlobVisu
           ELSE
              klon_0=LonPixDatCompInt(ilon_s)-4000
              DO ilon_0=1,klon_0
-                IF(ilon_lai.GT.NLonB_all(BV)) THEN
+                IF(ilon_lai.GT.NLonB_gov_out) THEN
                    write(*,*) 'Too many values:', ilon_lai, ilon_s, ilon_0, klon_0, LonDimsInt(ilat_lai), ilat_lai
                    STOP
                 END IF
@@ -191,12 +206,7 @@ PROGRAM GlobVisu
    
  END IF
  
- SELECT CASE(FV)
- CASE(1)
-    Region=Region/10.
- CASE(2)
-    Region=Region/100.
- END SELECT
+ Region=Region/Factor_out_all(FV)
  
  WRITE(*,*) MINVAL(Region), MAXVAL(Region)
 
@@ -210,8 +220,8 @@ PROGRAM GlobVisu
  WRITE(4,'(A21)') 'title Landscape Types'
 ! WRITE(4,'(A4,I8,A8,2F13.7)') 'xdef',(EastPix-WestPix+1), 'linear', West, PixSize/3600.
 ! WRITE(4,'(A4,I8,A8,2F13.7)') 'ydef',(SouthPix-NorthPix+1), 'linear', South, PixSize/3600.
- WRITE(4,'(A4,I8,A8,2F13.7)') 'xdef',(EastPix-WestPix+1), 'linear', West, PixSize_all(BV)/3600._8
- WRITE(4,'(A4,I8,A8,2F13.7)') 'ydef',(SouthPix-NorthPix+1), 'linear', South, PixSize_all(BV)/3600._8
+ WRITE(4,'(A4,I8,A8,2F13.7)') 'xdef',(EastPix-WestPix+1), 'linear', West, PixSize_gov_out/3600._8
+ WRITE(4,'(A4,I8,A8,2F13.7)') 'ydef',(SouthPix-NorthPix+1), 'linear', South, PixSize_gov_out/3600._8
  WRITE(4,'(A18)') 'zdef 1 levels 1000'
  WRITE(4,'(A33)') 'tdef  99 linear 00z21dec1978 12hr'
  WRITE(4,'(A6)') 'vars 1'
