@@ -29,7 +29,7 @@ The tool:
 
    ... or download the zip file and unzip it.
 
-2. Make links to files with ECO-SG-ML cover data and LAI data. From `ECO-SG-ML_LAI/data`:
+1. Make links to files with ECO-SG-ML cover data and LAI data. From `ECO-SG-ML_LAI/data`:
     
    `ln -s .../ecosgml_1.dir . ` for ECO-SG-ML covers
    
